@@ -6,6 +6,8 @@
 
 #include "task.h"
 
+ucontext_t main_uc,sim_uc,end_uc;
+char stack[1024*128];
 
 typedef enum TASK_STATE{
 	TASK_RUNNING,
@@ -15,28 +17,28 @@ typedef enum TASK_STATE{
 }TASK_STATE;
 
 typedef struct TASK_TCB{
+	ucontext_t uc;
+	TASK_STATE state;
 	int pid;
 	char name[10];
-	TASK_STATE state;
+	char priority;
 	int queueing_time;
-	int time_quantum;
+	int suspend_time;
+	char time_quantum;
 	struct TASK_TCB *next;
 }TASK_TCB;
 
 typedef struct Queue{
-	//int size;
 	TASK_TCB *front,*last;
 }Queue;
 
-
-
-//simulate mode
+/*simulate mode*/
 void hw_suspend(int msec_10);
 void hw_wakeup_pid(int pid);
 int hw_wakeup_taskname(char *task_name);
 int hw_task_create(char *task_name);
 
-//shell mode
+/*shell mode*/
 int shell_add(char **argv);
 int shell_start(char **argv);
 int shell_ps(char **argv);
@@ -59,5 +61,35 @@ int (*builtin_func[]) (char **) = {
 	&shell_ps,
 	&shell_remove
 };
+
+/*queue operation*/
+int num = 0;	//for pid
+Queue *HreadyQ = NULL;
+Queue *LreadyQ = NULL;
+Queue *waitingQ = NULL;
+Queue *terminateQ = NULL;
+TASK_TCB *runningQ = NULL;
+TASK_TCB *prev_runningQ = NULL;
+void enqueue(Queue *Q,TASK_TCB *task);
+TASK_TCB *dequeue(Queue *Q);
+int create_task(Queue *Q,char task_name[10],char time,char priority);
+TASK_TCB* remove_task(Queue *Q,int data);
+void initQ()
+{
+	HreadyQ = (Queue*)malloc(sizeof(Queue));
+	HreadyQ->front = HreadyQ->last = NULL;
+	LreadyQ = (Queue*)malloc(sizeof(Queue));
+	LreadyQ->front = LreadyQ->last = NULL;
+	waitingQ = (Queue*)malloc(sizeof(Queue));
+	waitingQ->front = waitingQ->last = NULL;
+	terminateQ = (Queue*)malloc(sizeof(Queue));
+	terminateQ->front = terminateQ->last = NULL;
+}
+
+/*signal*/
+int time = 0;
+void cz_signal();	//crtl+z
+void set_timer();	//timer init
+void time_count();
 
 #endif
