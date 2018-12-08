@@ -25,11 +25,12 @@ typedef struct TASK_TCB{
 	int queueing_time;
 	int suspend_time;
 	char time_quantum;
+	int wait_flag;
 	struct TASK_TCB *next;
 }TASK_TCB;
 
 typedef struct Queue{
-	TASK_TCB *front,*last;
+	TASK_TCB *front,*rear;
 }Queue;
 
 /*simulate mode*/
@@ -77,13 +78,13 @@ TASK_TCB* remove_task(Queue *Q,int data);
 void initQ()
 {
 	HreadyQ = (Queue*)malloc(sizeof(Queue));
-	HreadyQ->front = HreadyQ->last = NULL;
+	HreadyQ->front = HreadyQ->rear = NULL;
 	LreadyQ = (Queue*)malloc(sizeof(Queue));
-	LreadyQ->front = LreadyQ->last = NULL;
+	LreadyQ->front = LreadyQ->rear = NULL;
 	waitingQ = (Queue*)malloc(sizeof(Queue));
-	waitingQ->front = waitingQ->last = NULL;
+	waitingQ->front = waitingQ->rear = NULL;
 	terminateQ = (Queue*)malloc(sizeof(Queue));
-	terminateQ->front = terminateQ->last = NULL;
+	terminateQ->front = terminateQ->rear = NULL;
 }
 
 /*signal*/
