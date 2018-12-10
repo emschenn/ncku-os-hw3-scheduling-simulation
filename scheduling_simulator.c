@@ -8,10 +8,6 @@
 #include <string.h>
 #include <signal.h>
 #include <ucontext.h>
-void task7(){
-	//while(1);
-	printf("\n***test***\n");
-}
 int wait_flag = 1;	//everyone is waiting
 void simulate()
 {
@@ -27,19 +23,16 @@ void simulate()
 				runningQ = dequeue(HreadyQ);
 			else if(LreadyQ->front != NULL)
 				runningQ = dequeue(LreadyQ);
-			else if(waitingQ->front != NULL){	//when no one in readyQ,but some r still waiting
-				while(wait_flag);	//wait til one's waiting time is over,exit while
+			else if(waitingQ->front != NULL){	//when no one in readyQ, but some r still waiting
+				while(wait_flag);	//wait til one's waiting time is over, exit while
 				wait_flag = 1;
 				if(HreadyQ->front != NULL)
 					runningQ = dequeue(HreadyQ);
 				else if(LreadyQ->front != NULL)
 					runningQ = dequeue(LreadyQ);
 			}	
-			else{
-				//printf("hi");
+			else
 				return;
-			}
-				
 		}
 		runningQ->state = TASK_RUNNING;	
 		swapcontext(&sim_uc,&(runningQ->uc));
@@ -78,9 +71,11 @@ int create_task(Queue *Q,char task_name[10],char time,char priority)
 void enqueue(Queue *Q,TASK_TCB *task)
 {
 	if(Q->rear == NULL){
+		task->next=NULL;
 		Q->front = Q->rear = task;
 		return;
 	}
+
 	task->next = NULL;
 	Q->rear->next = task;
 	Q->rear = task;
@@ -91,8 +86,9 @@ TASK_TCB *dequeue(Queue *Q)
 		return NULL;
 	TASK_TCB *temp = Q->front;
 	Q->front = Q->front->next;
-	if(Q->front == NULL)
+	if(Q->front == NULL){
 		Q->rear = NULL;
+	}
 	temp->next = NULL;
 	return temp;
 }
@@ -101,6 +97,9 @@ TASK_TCB* remove_task(Queue *Q,int data)
 	TASK_TCB* temp = Q->front,*prev;
 	if(temp != NULL && temp->pid == data){	//if delete node is front
 		Q->front = temp->next;
+		if(temp->next == NULL){
+			Q->rear = NULL;
+		}
 		temp->next = NULL;
 		return(temp);
 		//return;
@@ -119,7 +118,7 @@ TASK_TCB* remove_task(Queue *Q,int data)
 
 void cz_signal()
 {
-	printf("stop\n");
+	//printf("stop\n");
 	if(runningQ == NULL)
 		swapcontext(&sim_uc,&main_uc);	//stop sim_uculation
 	else	
@@ -154,12 +153,12 @@ void time_count()	//call in every 10 ms
 	while(node != NULL){
 		node->suspend_time-=10;
 		if(node->suspend_time == 0){
-			remove_task(waitingQ,node->pid);
+			TASK_TCB *temp = remove_task(waitingQ,node->pid);
 			//printf("%p",waitingQ->front);
-			if(node->priority == 'H')
-				enqueue(HreadyQ,node);
-			else if(node->priority == 'L')
-				enqueue(LreadyQ,node);
+			if(temp->priority == 'H')
+				enqueue(HreadyQ,temp);
+			else if(temp->priority == 'L')
+				enqueue(LreadyQ,temp);
 			wait_flag = 0;
 		}
 		node = node->next;
@@ -267,6 +266,23 @@ int shell_add(char **argv)
 			time_quantum = argv[5][0];
 		else if(strcmp(argv[4],"-p")==0)
 			priority = argv[5][0];
+	}
+	//check task name
+	if(strcmp(task_name,"task1")==0 || strcmp(task_name,"Task1")==0)
+		strcpy(task_name,"task1");
+	else if(strcmp(task_name,"task2")==0 || strcmp(task_name,"Task2")==0)
+		strcpy(task_name,"task2");
+	else if(strcmp(task_name,"task3")==0 || strcmp(task_name,"Task3")==0)
+		strcpy(task_name,"task3");
+	else if(strcmp(task_name,"task4")==0 || strcmp(task_name,"Task4")==0)
+		strcpy(task_name,"task4");
+	else if(strcmp(task_name,"task5")==0 || strcmp(task_name,"Task5")==0)
+		strcpy(task_name,"task5");
+	else if(strcmp(task_name,"task6")==0 || strcmp(task_name,"Task6")==0)
+		strcpy(task_name,"task6");
+	else{
+		printf("No such task.\n");
+		return 1;
 	}
 	//create task_tcb
 	if(priority == 'H')
