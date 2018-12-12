@@ -14,6 +14,7 @@ void simulate()
 	wait_flag = 1;
 	while(1){
 		if(runningQ != NULL){	//return from task itself
+			wait_flag = 1;
 			runningQ->state = TASK_TERMINATED;
 			enqueue(terminateQ,runningQ);
 			runningQ = NULL;
@@ -153,6 +154,7 @@ void time_count()	//call in every 10 ms
 	while(node != NULL){
 		node->suspend_time-=10;
 		if(node->suspend_time == 0){
+			//printf("%s  %d\n", node->name, node->suspend_time);
 			TASK_TCB *temp = remove_task(waitingQ,node->pid);
 			//printf("%p",waitingQ->front);
 			if(temp->priority == 'H')
